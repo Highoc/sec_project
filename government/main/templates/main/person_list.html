@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Список граждан РФ</title>
+</head>
+<body>
+    {% for person in persons %}
+        {{ person.passport_series }} {{ person.passport_number }}<br>
+    {% endfor %}
+</body>
+</html>
