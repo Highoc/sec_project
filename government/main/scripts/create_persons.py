@@ -82,7 +82,6 @@ def create_person():
                signature_public_key=signature_public_key,
                signature_i=signature_i).save()
 
-'''
-for i in range(20):
+
+for i in range(30):
     create_person()
-'''
