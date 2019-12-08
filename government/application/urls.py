@@ -19,6 +19,7 @@ from django.urls import path
 from main.views import *
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', PersonListView.as_view()),
+    path(r'admin/', admin.site.urls),
+    path(r'', PersonListView.as_view()),
+    path(r'person/(?P<serial>[0-9]{4})/(?P<number>[0-9]{6})/', PersonView.as_view()),
 ]

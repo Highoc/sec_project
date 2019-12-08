@@ -18,14 +18,8 @@ class Person(models.Model):
 
     def __str__(self):
         return '{} {} - {} {}'.format(self.passport_series, self.passport_number, self.last_name, self.first_name)
-    '''
-    @classmethod
-    def create(cls, ):
-        person = cls(first_name, last_name, patronymic, birth_date, address, passport_series, passport_number=)
-        return person
-    '''
 
     class Meta:
         verbose_name = 'Гражданин РФ'
-        verbose_name_plural = 'Граждане РФ'
+        verbose_name_plural = 'Список граждан РФ'
         unique_together = ['passport_series', 'passport_number']

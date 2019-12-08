@@ -5,6 +5,8 @@
     <title>Список граждан РФ</title>
 </head>
 <body>
-    Person List
+    {% for person in persons %}
+        {{ person.passport_series }} {{ person.passport_number }}<br>
+    {% endfor %}
 </body>
 </html>
