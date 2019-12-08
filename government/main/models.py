@@ -12,7 +12,7 @@ class Person(models.Model):
     passport_series = models.IntegerField(verbose_name='Серия паспорта')
     passport_number = models.IntegerField(verbose_name='Номер паспорта')
 
-    signature_public_key = models.IntegerField(verbose_name='Публичный ключ личной ЭЦП')
+    signature_public_key = models.BinaryField(verbose_name='Публичный ключ личной ЭЦП')
 
     signature_i = models.IntegerField(verbose_name='Государственная подпись, удостоверяющая верность данных')
 
