@@ -14,7 +14,7 @@ class Person(models.Model):
 
     signature_public_key = models.BinaryField(verbose_name='Публичный ключ личной ЭЦП')
 
-    signature_i = models.CharField(max_length=2048, verbose_name='Государственная подпись, удостоверяющая верность данных')
+    signature_i = models.BinaryField(max_length=2048, verbose_name='Государственная подпись, удостоверяющая верность данных')
 
     def __str__(self):
         return '{} {} - {} {}'.format(self.passport_series, self.passport_number, self.last_name, self.first_name)
