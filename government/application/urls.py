@@ -15,6 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.conf import settings
+from django.conf.urls.static import static
+
 
 from main.views import *
 
@@ -22,4 +25,4 @@ urlpatterns = [
     path(r'admin/', admin.site.urls),
     path(r'', PersonListView.as_view()),
     path(r'person/(?P<serial>[0-9]{4})/(?P<number>[0-9]{6})/', PersonView.as_view()),
-]
+] + static(settings.STATIC_URL)

@@ -1,12 +1,36 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Список граждан РФ</title>
+    <link href="{% static "main/info.css" %}" rel="stylesheet">
 </head>
 <body>
-    {% for person in persons %}
-        {{ person.passport_series }} {{ person.passport_number }}<br>
-    {% endfor %}
+    <div id="search">
+        <form method="get" action="/">
+        <input name="search" type="text">
+        <input type="submit" value="Найти">
+    </form>
+    </div>
+    <table>
+        <tr>
+          <th>ФИО</th>
+          <th>Адрес</th>
+          <th>Серия паспорта</th>
+          <th>Номер паспорта</th>
+          <th>Дата рождения</th>
+        </tr>
+        {% for person in persons %}
+            <tr>
+                <th>{{ person.first_name }} {{ person.last_name }} {{ person.patronymic }}</th>
+                <th> {{ person.address }}</th>
+                <th> {{ person.passport_series }}</th>
+                <th> {{ person.passport_number }}</th>
+                <th> {{ person.birth_date }}</th>
+            </tr>
+        {% endfor %}
+    </table>
+
 </body>
 </html>
