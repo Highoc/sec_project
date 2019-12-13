@@ -29,8 +29,16 @@ class Voter(models.Model):
     signature_public_key = models.BinaryField(verbose_name='Публичный ключ личной ЭЦП')
     election = models.ForeignKey(Election, verbose_name='Голосование', related_name='voters', on_delete=models.CASCADE)
 
-    vote = models.OneToOneField('election.Voter', verbose_name='Голос', related_name='voter_vote', on_delete=models.SET_NULL, null=True)
-    contract = models.OneToOneField('election.Voter', verbose_name='Контракт', related_name='voter_contract', on_delete=models.SET_NULL, null=True)
+    vote = models.OneToOneField('election.Vote', verbose_name='Голос', related_name='voter', on_delete=models.SET_NULL, null=True)
+    contract = models.OneToOneField('election.Contract', verbose_name='Контракт', related_name='voter', on_delete=models.SET_NULL, null=True)
+
+    def __str__(self):
+        return '{} {} | {}'.format(self.passport_series, self.passport_number, self.election.name)
+
+    class Meta:
+        verbose_name = 'Голосующий'
+        verbose_name_plural = 'голосующие'
+        unique_together = ['passport_series', 'passport_number', 'election']
 
 
 class Candidate(models.Model):
@@ -52,7 +60,20 @@ class Candidate(models.Model):
 
 
 class Contract(models.Model):
-    pass
+    info = models.TextField(max_length=256, verbose_name='Информация о голосующем')
+    masked_vote_private_key = models.BinaryField(max_length=2048, verbose_name='Ключ дешифрования для голосования')
+    masked_check_public_key = models.BinaryField(max_length=2048, verbose_name='Ключ шифрования для проверки')
+    signed_masked_vote_private_key = models.BinaryField(max_length=2048, verbose_name='Ключ дешифрования для голосования, подписанный избиркомом')
+
+    sign_election = models.BinaryField(max_length=2048, verbose_name='Подпись избиркома')
+    sign_voter = models.BinaryField(max_length=2048, verbose_name='Подпись голосующего')
+
+    def __str__(self):
+        return '{} {} | {}'.format(self.voter.passport_series, self.voter.passport_number, self.voter.election.name)
+
+    class Meta:
+        verbose_name = 'Контракт голосующих'
+        verbose_name_plural = 'контракты голосующих'
 
 
 class Vote(models.Model):

@@ -85,12 +85,25 @@ class RegisterVoterView(View):
         if response.status_code != 200:
             return HttpResponseNotFound('Passport is incorrect')
 
+        first_name = body.get('first_name', None)
+        last_name = body.get('last_name', None)
+        patronymic = body.get('patronymic', None)
+
         voter = Voter.objects.filter(passport_series=passport_series,
                                      passport_number=passport_number,
+                                     first_name=first_name,
+                                     last_name=last_name,
+                                     patronymic=patronymic,
                                      election=election).first()
 
         if not voter:
             person = response.json()
+
+            if not first_name or first_name != person['first_name'] or\
+               not last_name or last_name != person['last_name'] or\
+               not patronymic or  patronymic != person['patronymic']:
+                return HttpResponseNotFound('Passport is incorrect')
+
             voter = Voter.objects.create(first_name=person['first_name'],
                                          last_name=person['last_name'],
                                          patronymic=person['patronymic'],
