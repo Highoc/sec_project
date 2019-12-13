@@ -15,7 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import re_path
-from election.views import ElectionListView, CandidateListView, RegisterVoterView
+from election.views import ElectionListView, CandidateListView, RegisterVoterView, \
+    SignVoterContractView, SignVoterElectionPrivateKeyView, PublicKeyView, PrivateKeyView
 
 
 def mock(request):
@@ -24,10 +25,12 @@ def mock(request):
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
+    re_path(r'^public_key/$', PublicKeyView.as_view()),
+    #re_path(r'^private_key/$', PrivateKeyView.as_view()),
     re_path(r'^election/$', ElectionListView.as_view()),
     re_path(r'^election/(?P<election_id>[0-9]+)/$', mock),
     re_path(r'^election/(?P<election_id>[0-9]+)/candidate/$', CandidateListView.as_view()),
     re_path(r'^election/(?P<election_id>[0-9]+)/register/$', RegisterVoterView.as_view()),
-    re_path(r'^election/(?P<election_id>[0-9]+)/sign/election_private_key/$', mock),
-    re_path(r'^election/(?P<election_id>[0-9]+)/sign/contract/$', mock),
+    re_path(r'^election/(?P<election_id>[0-9]+)/voter/(?P<voter_id>[0-9]+)/sign/election_private_key/$', SignVoterElectionPrivateKeyView.as_view()),
+    re_path(r'^election/(?P<election_id>[0-9]+)/voter/(?P<voter_id>[0-9]+)/sign/contract/$', SignVoterContractView.as_view()),
 ]

@@ -125,3 +125,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+'''
+with open('../../election_private_key/private_key.pem', 'rb') as file:
+    SIGNATURE_ELECTION_PRIVATE = file.read()
+'''
+
+with open(os.path.join(BASE_DIR, '../election_keys/public.pem'), 'rb') as public:
+    SIGNATURE_ELECTION_PUBLIC = public.read()
+
+with open(os.path.join(BASE_DIR, '../election_keys/private.pem'), 'rb') as private:
+    SIGNATURE_ELECTION_PRIVATE = private.read()

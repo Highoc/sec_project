@@ -1,10 +1,15 @@
 from django.views.generic import View
 from django.http import JsonResponse, HttpResponseNotFound
+from application.settings import SIGNATURE_ELECTION_PUBLIC, SIGNATURE_ELECTION_PRIVATE
 
 from datetime import datetime
-import requests
+import requests, json
 
-from .models import Election
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+from .models import Election, Voter
+from .helpers import sign_key
 
 
 class ElectionListView(View):
@@ -54,29 +59,99 @@ class CandidateListView(View):
 
 
 class RegisterVoterView(View):
-    def get(self, request, election_id):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(RegisterVoterView, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, election_id):
         current_ts = datetime.now()
         election = Election.objects.filter(id=election_id,
                                            start_date__lte=current_ts,
                                            end_date__gte=current_ts).first()
-        if election:
-            candidates = election.candidates.all()
+        if not election:
+            return HttpResponseNotFound('Election is incorrect')
 
-            if candidates:
-                serialized_candidates = []
-                for candidate in candidates:
-                    url = 'http://localhost:8000/person/{}/{}/'.format(candidate.passport_series, candidate.passport_number)
-                    response = requests.get(url)
-                    if response.status_code == 200:
-                        person = response.json()
-                        serialized_candidates.append({
-                            'id': candidate.id,
-                            'first_name': person['first_name'],
-                            'last_name': person['last_name'],
-                            'patronymic': person['patronymic'],
-                            'description': candidate.description,
-                        })
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
 
-                return JsonResponse(serialized_candidates, safe=False)
+        passport_series = body.get('passport_series', None)
+        passport_number = body.get('passport_number', None)
 
-        return HttpResponseNotFound('Elections doesn\'t exist')
+        if not passport_number or not passport_series:
+            return HttpResponseNotFound('Passport is incorrect')
+
+        url = f'http://localhost:8000/person/{passport_series}/{passport_number}/'
+        response = requests.get(url)
+        if response.status_code != 200:
+            return HttpResponseNotFound('Passport is incorrect')
+
+        voter = Voter.objects.filter(passport_series=passport_series,
+                                     passport_number=passport_number,
+                                     election=election).first()
+
+        if not voter:
+            person = response.json()
+            voter = Voter.objects.create(first_name=person['first_name'],
+                                         last_name=person['last_name'],
+                                         patronymic=person['patronymic'],
+                                         passport_series=person['passport_series'],
+                                         passport_number=person['passport_number'],
+                                         signature_public_key=person['signature_public_key'].encode(),
+                                         election=election)
+
+        if voter.vote or voter.contract:
+            return HttpResponseNotFound('Voter is already exists')
+
+        return JsonResponse({
+            'id': voter.id
+        })
+
+
+class SignVoterElectionPrivateKeyView(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(SignVoterElectionPrivateKeyView, self).dispatch(request, *args, **kwargs)
+
+    def post(self, request, election_id, voter_id):
+        current_ts = datetime.now()
+        election = Election.objects.filter(id=election_id,
+                                           start_date__lte=current_ts,
+                                           end_date__gte=current_ts).first()
+        if not election:
+            return HttpResponseNotFound('Election doesn\'t exist')
+
+        voter = Voter.objects.filter(id=voter_id).first()
+        if not voter:
+            return HttpResponseNotFound('Voter doesn\'t exist')
+
+        body_unicode = request.body.decode('utf-8')
+        body = json.loads(body_unicode)
+
+        election_private_key =  body.get('election_private_key', None)
+
+        if not election_private_key:
+            return HttpResponseNotFound('Election private key is incorrect')
+
+        signed_election_private_key = sign_key(election_private_key)
+
+        return JsonResponse({
+            'signed_election_private_key': signed_election_private_key,
+        })
+
+
+class SignVoterContractView(View):
+    pass
+
+
+class PublicKeyView(View):
+    def get(self, request):
+        return JsonResponse({
+            'public_key': SIGNATURE_ELECTION_PUBLIC.decode('utf-8'),
+        })
+
+
+class PrivateKeyView(View):
+    def get(self, request):
+        return JsonResponse({
+            'private_key': SIGNATURE_ELECTION_PRIVATE.decode('utf-8'),
+        })
