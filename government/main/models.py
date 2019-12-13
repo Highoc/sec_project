@@ -21,5 +21,5 @@ class Person(models.Model):
 
     class Meta:
         verbose_name = 'Гражданин РФ'
-        verbose_name_plural = 'Список граждан РФ'
+        verbose_name_plural = 'cписок граждан РФ'
         unique_together = ['passport_series', 'passport_number']
