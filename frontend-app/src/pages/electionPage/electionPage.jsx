@@ -8,6 +8,9 @@ import Paper from "@material-ui/core/Paper";
 import styles from './electionsPage.styles';
 import withStyles from "@material-ui/core/styles/withStyles";
 import { Typography, Button } from "@material-ui/core";
+import { Link } from 'react-router-dom';
+import { connect } from 'react-redux';
+import { setElectionId } from "../../store/actions/election";
 
 function createData(name, surname, thirdName, status, action) {
   return { name, surname, thirdName, status, action };
@@ -22,9 +25,17 @@ const rows = [
 ];
 
 class electionPage extends Component {
+  componentDidMount() {
+    const { id } = this.props.location.aboutProps;
+    console.log(id);
+    this.props.onElection(id);
+  }
+
   render() {
     const { name } = this.props.location.aboutProps;
     const { classes } = this.props;
+    const ContractPage = props => <Link to="/createContract" {...props} />;
+
     return (
       <div>
         <div className={classes.headerText}>
@@ -59,7 +70,7 @@ class electionPage extends Component {
           </Table>
         </Paper>
         <div className={classes.button}>
-          <Button color="primary" size="medium" variant="outlined">Участвовать в голосовании</Button>
+          <Button color="primary" size="medium" variant="outlined" component={ContractPage} >Участвовать в голосовании</Button>
         </div>
 
       </div>
@@ -67,4 +78,12 @@ class electionPage extends Component {
   }
 }
 
-export default withStyles(styles)(electionPage);
+const mapDispatchToProps = dispatch => ({
+  onElection: id => dispatch(setElectionId(id)),
+});
+
+const mapStateToProps = state => ({
+  id: state.election.id,
+});
+
+export default withStyles(styles)(connect(mapStateToProps, mapDispatchToProps)(electionPage));
