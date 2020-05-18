@@ -9,12 +9,4 @@ export default class RequestResolver {
       headers,
     });
   }
-
-  static getGuest() {
-    return headers => axios.create({
-      baseURL: backendURL,
-      timeout: 50000,
-      headers,
-    });
-  }
 }

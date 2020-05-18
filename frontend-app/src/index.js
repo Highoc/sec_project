@@ -10,6 +10,7 @@ import thunk from 'redux-thunk';
 
 import authorizationReducer from './store/reducers/authorization';
 import registrationReducer from './store/reducers/register';
+import electionReducer from './store/reducers/election';
 
 import './index.css';
 import App from './App';
@@ -18,6 +19,7 @@ import * as serviceWorker from './serviceWorker';
 const rootReducer = combineReducers({
   authorization: authorizationReducer,
   reg: registrationReducer,
+  election: electionReducer,
 });
 
 /* eslint-disable no-underscore-dangle */
