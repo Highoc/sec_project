@@ -35,7 +35,7 @@ class PersonView(View):
                 'passport_series': person.passport_series,
                 'passport_number': person.passport_number,
                 'signature_public_key': person.signature_public_key.decode('utf-8'),
-                'signature_i': person.signature_i.decode('utf-8'),
+                #'signature_i': person.signature_i.decode('utf-8'),
             })
         else:
             return HttpResponseNotFound('Person doesn\'t exist')

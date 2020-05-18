@@ -25,7 +25,7 @@ SECRET_KEY = 'd^&n(sim-%))_@)b1&$p3_j#-5_^yq2yh-x5krwutaumc1$^8e'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.1.205', 'localhost', '10.55.128.91']
 
 
 # Application definition
@@ -37,17 +37,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'election',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ORIGIN_WHITELIST = [
+    'http://localhost:3000',
 ]
 
 ROOT_URLCONF = 'application.urls'
@@ -119,3 +125,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+'''
+with open('../../election_private_key/private_key.pem', 'rb') as file:
+    SIGNATURE_ELECTION_PRIVATE = file.read()
+'''
+
+with open(os.path.join(BASE_DIR, '../election_keys/public.pem'), 'rb') as public:
+    SIGNATURE_ELECTION_PUBLIC = public.read()
+
+with open(os.path.join(BASE_DIR, '../election_keys/private.pem'), 'rb') as private:
+    SIGNATURE_ELECTION_PRIVATE = private.read()
