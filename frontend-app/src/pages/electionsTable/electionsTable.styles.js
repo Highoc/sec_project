@@ -1,11 +1,14 @@
 const styles = theme => ({
   root: {
-    width: '50%',
+    width: '100%',
     overflowX: 'auto',
     margin: 'auto',
   },
   table: {
     minWidth: 650,
+  },
+  button: {
+    margin: '50px',
   },
 });
 

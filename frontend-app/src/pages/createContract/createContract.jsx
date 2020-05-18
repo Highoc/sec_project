@@ -1,17 +1,26 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import {
-  Avatar, Button, CssBaseline, FormControl, Paper, Typography, OutlinedInput, InputLabel,
+  Avatar,
+  Button,
+  CssBaseline,
+  FormControl,
+  InputLabel,
+  OutlinedInput,
+  Paper,
+  Typography,
 } from '@material-ui/core';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import withStyles from '@material-ui/core/styles/withStyles';
-import { connect } from 'react-redux';
+import {connect} from 'react-redux';
 import styles from './createContract.styles';
 import createRSApair from "../../helpers/crypto/createRSApair";
-import { withRouter } from 'react-router-dom';
+import {withRouter} from 'react-router-dom';
 import RequestResolver from "../../helpers/RequestResolver/RequestResolver";
+import {setContract, setK1Data, setKeys, setMCheck, setMVote, setPrivateKey, setElectionId, setVoterId} from "../../store/actions/election";
 
 const BlindSignature = require('blind-signatures');
 const NodeRSA = require('node-rsa');
+let privateKeyUserPem = '';
 
 class CreateContract extends Component {
   constructor(props) {
@@ -19,13 +28,26 @@ class CreateContract extends Component {
     this.state = {
       isLoaded: false,
       isValid: true,
+      url: '',
     };
     this.backend = RequestResolver.getBackend();
   }
 
+  checkData = (data) => {
+    let isValid = true;
+    Object.values(data).forEach((elem) => {
+      if (elem === ''){
+        isValid = false;
+      }
+    });
+    return isValid;
+  };
+
   async submitHandler(event) {
     event.preventDefault();
-    const electionId = this.props.id;
+    const { id } = this.props.location.aboutProps;
+    const electionId = id;
+    this.props.setElectionId(electionId);
     console.log(electionId);
     let voterId, blindedVote, blindedCheck;
     let MaskVote, MaskCheck;
@@ -36,9 +58,8 @@ class CreateContract extends Component {
     const name = document.getElementById('name');
     const secondName = document.getElementById('second_name');
     const patronymic = document.getElementById('patronymic');
-    const FIO = { name: name.value, second_name: secondName.value, patronymic: patronymic.value };
-
-
+    const FIO = `${secondName.value} ${name.value} ${patronymic.value} **** ****${passportNumber.value.slice(4)}`;
+    console.log(FIO);
     const data = {
       passport_series: passportSeries.value,
       passport_number: passportNumber.value,
@@ -46,17 +67,14 @@ class CreateContract extends Component {
       last_name: secondName.value,
       patronymic: patronymic.value,
     };
-
-    try {
-      const result = await this.backend({ 'Content-Type': 'application/json' }).post(
-        `election/${electionId}/register/`, data);
-      voterId = result.data.id;
-    }  catch (error) {
-      this.setState({isLoaded: false});
-      console.log(error);
+    if (!this.checkData(data) || privateKeyUserPem === ''){
+      alert('Заполните все поля!');
+      return;
     }
+    const keyPrivate = new NodeRSA(privateKeyUserPem);
+    data.passport_number_signed = keyPrivate.sign(passportNumber.value, 'base64', 'utf8');
+    console.log(data);
 
-    // строим контракт
     // получили public_key избиркома, чтоьы узнать N и e
     try {
       const result = await this.backend().get(`public_key/`);
@@ -84,21 +102,85 @@ class CreateContract extends Component {
       blindedCheck = this.getBlindedCheck(MaskCheck).blindedCheck;
     } catch (error) {
       console.log(error);
+      return;
     }
-    // отправляем замаскированный message для подписания избиркомом
+
     try {
       const result = await this.backend({ 'Content-Type': 'application/json' }).post(
-        `election/${electionId}/voter/${voterId}/sign/election_private_key/`,
-        { election_private_key: blindedVote.toString() });
-      MaskVote.signed = result.data; // замаскированный секретным множит ключи, подписанный избиркомом
+        `election/${electionId}/register/`, data);
+      voterId = result.data.id;
+      this.props.setVoterId(voterId);
+      if (result.data.k){
+        const KSigned = result.data; // полученный контракт K
+        this.props.setContract(KSigned);
+        this.props.setKeys(keyPairs);
+        this.props.setMVote(MaskVote);
+        this.props.setMCheck(MaskCheck);
+        this.props.setPrivateKey(privateKeyUserPem);
+        this.props.history.push(`/election/${electionId}/candidate`);
+        return;
+      }
     }  catch (error) {
       this.setState({isLoaded: false});
       console.log(error);
     }
+    const voterIdSigned = keyPrivate.sign(voterId.toString(), 'base64', 'utf8');
+    // строим контракт
+
+    // отправляем замаскированный message для подписания избиркомом
+    try {
+      const result = await this.backend({ 'Content-Type': 'application/json' }).post(
+        `election/${electionId}/contract/sign/`,
+        {
+          election_private_key: blindedVote.toString(),
+          voter_id: voterId,
+          voter_id_signed: voterIdSigned,
+        });
+      MaskVote.signed = result.data; // замаскированный секретным множит ключи, подписанный избиркомом
+    }  catch (error) {
+      this.setState({isLoaded: false});
+      console.log(error);
+      return;
+    }
     // собираем K1
-    const K1 = {i: FIO, vote: blindedVote.toString(), check: blindedCheck.toString(), signed: MaskVote.signed };
-    console.log(K1);
-    //this.props.history.push(`/election/${id}/candidate`);
+
+    const K1 = {
+      info: FIO,
+      vote_private_key_masked: blindedVote.toString(),
+      check_public_key_masked: blindedCheck.toString(),
+      vote_private_key_masked_signed: MaskVote.signed.signed_election_private_key.toString(),
+    };
+
+    const signedK1 = keyPrivate.sign(JSON.stringify(K1), 'base64', 'utf8');
+    console.log('json');
+    console.log(JSON.stringify(K1));
+
+    const dataK = {
+      k: K1,
+      k_signed_by_voter: signedK1,
+      credentials: { passport_series: passportSeries.value, passport_number: passportNumber.value },
+      json: JSON.stringify(K1),
+    };
+    console.log(dataK);
+    // закидываем все в redux
+    this.props.setK1Info(K1);
+    this.props.setKeys(keyPairs);
+    this.props.setMVote(MaskVote);
+    this.props.setMCheck(MaskCheck);
+    this.props.setPrivateKey(privateKeyUserPem);
+    try {
+      const result = await this.backend({ 'Content-Type': 'application/json' }).post(
+        `election/${electionId}/contract/create/`,
+        dataK);
+      const KSigned = result.data; // полученный контракт K
+      this.props.setContract(KSigned);
+      console.log(KSigned);
+    }  catch (error) {
+      console.log(error);
+      return;
+    }
+    console.log(electionId);
+    this.props.history.push(`/election/${electionId}/candidate`);
   }
 
   getBlindedVote = (MaskVote) => {
@@ -149,6 +231,23 @@ class CreateContract extends Component {
     return { vote, check };
   };
 
+  handleChange = (event) => {
+    const reader = new FileReader();
+    reader.onload = function() {
+
+      const arrayBuffer = this.result,
+        array = new Uint8Array(arrayBuffer);
+      privateKeyUserPem = String.fromCharCode.apply(null, array);
+
+    };
+    reader.readAsArrayBuffer(event.target.files[0]);
+    const url = URL.createObjectURL(event.target.files[0]);
+    this.setState({url: url});
+    event.preventDefault();
+
+  };
+
+
   render() {
     const { classes, error } = this.props;
     const { isValid } = this.state;
@@ -173,25 +272,29 @@ class CreateContract extends Component {
           </Typography>
           <form className={classes.form}>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="name">Имя</InputLabel>
-              <OutlinedInput id="name" name="name" autoFocus labelWidth={0} />
+              <InputLabel htmlFor="name" variant="filled">Имя</InputLabel>
+              <OutlinedInput id="name" name="name" autoFocus labelWidth={0}/>
             </FormControl>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="second_name">Фамилия</InputLabel>
-              <OutlinedInput id="second_name" name="second_name" autoFocus labelWidth={0} />
+              <InputLabel htmlFor="second_name" variant="filled">Фамилия</InputLabel>
+              <OutlinedInput id="second_name" name="second_name" autoFocus labelWidth={0}/>
             </FormControl>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="patronymic">Отчество</InputLabel>
-              <OutlinedInput id="patronymic" name="patronymic" autoFocus labelWidth={0} />
+              <InputLabel htmlFor="patronymic" variant="filled">Отчество</InputLabel>
+              <OutlinedInput id="patronymic" name="patronymic" autoFocus labelWidth={0}/>
             </FormControl>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="passportSeries">Серия паспорта</InputLabel>
-              <OutlinedInput id="passportSeries" name="passportSeries" autoFocus labelWidth={0} />
+              <InputLabel htmlFor="passportSeries" variant="filled">Серия паспорта</InputLabel>
+              <OutlinedInput id="passportSeries" name="passportSeries" autoFocus labelWidth={0}/>
             </FormControl>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="passportNumber">Номер паспорта</InputLabel>
-              <OutlinedInput id="passportNumber" name="passportNumber" autoFocus labelWidth={0} />
+              <InputLabel htmlFor="passportNumber" variant="filled">Номер паспорта</InputLabel>
+              <OutlinedInput id="passportNumber" name="passportNumber" autoFocus labelWidth={0}/>
             </FormControl>
+            <div>
+              <label htmlFor="file_upload">Choose your privateKey.pem to upload (PEM)</label>
+              <input type="file" id="file" name="file_upload" accept=".pem" onChange={ this.handleChange}/>
+            </div>
             {errorList}
             <Button
               type="submit"
@@ -211,6 +314,14 @@ class CreateContract extends Component {
 }
 
 const mapDispatchToProps = dispatch => ({
+  setK1Info: data => dispatch(setK1Data(data)),
+  setMVote: m => dispatch(setMVote(m)),
+  setMCheck: m => dispatch(setMCheck(m)),
+  setKeys: keys => dispatch(setKeys(keys)),
+  setContract: data => dispatch(setContract(data)),
+  setPrivateKey: key => dispatch(setPrivateKey(key)),
+  setElectionId: id => dispatch(setElectionId(id)),
+  setVoterId: id => dispatch(setVoterId(id)),
 });
 
 const mapStateToProps = state => ({

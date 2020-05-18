@@ -1,5 +1,5 @@
 import * as actionTypes from '../actionTypes';
-import RequestResolver from "../../helpers/RequestResolver/RequestResolver";
+//import RequestResolver from "../../helpers/RequestResolver/RequestResolver";
 
 export const loginStart = () => ({
   type: actionTypes.LOGIN_START,

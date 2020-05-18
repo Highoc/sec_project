@@ -2,13 +2,17 @@ import React, { Component } from "react";
 import RequestResolver from "../../helpers/RequestResolver/RequestResolver";
 
 
+let stringFile = '';
+
 class testPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
       data: {},
       isLoaded: false,
+      string: '',
     };
+
     this.backend = RequestResolver.getBackend();
   }
   /*
@@ -76,10 +80,39 @@ class testPage extends Component {
       console.log(error);
     }
   }*/
+
+
+
+
+  handleChange = (event) => {
+    const reader = new FileReader();
+    reader.onload = function() {
+
+      const arrayBuffer = this.result,
+        array = new Uint8Array(arrayBuffer),
+        binaryString = String.fromCharCode.apply(null, array);
+
+      stringFile = binaryString;
+
+    };
+    reader.readAsArrayBuffer(event.target.files[0]);
+    const url = URL.createObjectURL(event.target.files[0]);
+    this.setState({url: url});
+    event.preventDefault();
+
+  };
+
   render() {
     return (
         <div>
-          Данные не загрузились
+          Файл
+          <div>
+            <label htmlFor="file_upload">Choose your privateKey.pem to upload (PEM)</label>
+            <div>
+              {stringFile}
+            </div>
+            <input type="file" id="file" name="file_upload" accept=".pem" onChange={ this.handleChange}/>
+          </div>
         </div>
     )
   }

@@ -1,6 +1,6 @@
 const styles = theme => ({
   root: {
-    width: '50%',
+    width: '100%',
     overflowX: 'auto',
     margin: 'auto',
   },
@@ -12,6 +12,11 @@ const styles = theme => ({
   },
   button: {
     margin: '50px',
+  },
+  cell: {
+    width: '200px',
+    maxWidth: '200px',
+    whiteSpace: 'pre-line',
   }
 });
 

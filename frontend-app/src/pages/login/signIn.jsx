@@ -27,7 +27,7 @@ class SignIn extends Component {
     const isValid = true;
 
     if (isValid) {
-      onLogin(event, loginInput.value, passwordInput.value);
+      onLogin(event, '', '');
     } else {
       this.setState({ isCorrect: false });
     }
@@ -49,21 +49,9 @@ class SignIn extends Component {
             <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
-            Вход/
-            <NavLink to="/register">
-              Регистрация
-            </NavLink>
+            Вход
           </Typography>
           <form className={classes.form}>
-            <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="username">Серия и номер паспорта</InputLabel>
-              <OutlinedInput id="username" name="username" autoFocus labelWidth={0} />
-            </FormControl>
-            <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="password">Пароль</InputLabel>
-              <OutlinedInput name="password" type="password" id="password" autoComplete="current-password" labelWidth={0} />
-            </FormControl>
-            {errorMessage}
             <Button
               type="submit"
               fullWidth

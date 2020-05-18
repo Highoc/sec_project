@@ -66,15 +66,15 @@ class Register extends Component {
           </Typography>
           <form className={classes.form}>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="username">Серия и номер паспорта</InputLabel>
+              <InputLabel htmlFor="username" variant="filled">Серия и номер паспорта</InputLabel>
               <OutlinedInput id="username" name="username" autoFocus labelWidth={0} />
             </FormControl>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="password">Пароль</InputLabel>
+              <InputLabel htmlFor="password" variant="filled">Пароль</InputLabel>
               <OutlinedInput name="password1" type="password" id="password1" autoComplete="current-password" labelWidth={0} />
             </FormControl>
             <FormControl margin="normal" required fullWidth>
-              <InputLabel htmlFor="password">Подтвердите пароль</InputLabel>
+              <InputLabel htmlFor="password" variant="filled">Подтвердите пароль</InputLabel>
               <OutlinedInput name="password2" type="password" id="password2" autoComplete="current-password" labelWidth={0} />
             </FormControl>
             {errorList}
