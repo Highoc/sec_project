@@ -16,18 +16,15 @@
     <table>
         <tr>
           <th>ФИО</th>
-          <th>Адрес</th>
           <th>Серия паспорта</th>
           <th>Номер паспорта</th>
-          <th>Дата рождения</th>
+
         </tr>
         {% for person in persons %}
             <tr>
                 <th>{{ person.first_name }} {{ person.last_name }} {{ person.patronymic }}</th>
-                <th> {{ person.address }}</th>
-                <th> {{ person.passport_series }}</th>
-                <th> {{ person.passport_number }}</th>
-                <th> {{ person.birth_date }}</th>
+                <th>{{ person.passport_series }}</th>
+                <th>{{ person.passport_number }}</th>
             </tr>
         {% endfor %}
     </table>
