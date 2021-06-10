@@ -1,5 +1,5 @@
 asgiref==3.2.3
-Django==3.0
+Django==3.1.12
 freeze==1.0.10
 mimesis==3.3.0
 pycrypto==2.6.1
